@@ -228,10 +228,14 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
             child: const Text('続ける'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
+              // 試合を終了して履歴を保存
+              await ref.read(matchProvider.notifier).endMatch();
               ref.read(matchProvider.notifier).resetMatch();
-              Navigator.pop(context);
-              Navigator.pop(context);
+              if (context.mounted) {
+                Navigator.pop(context);
+                Navigator.pop(context);
+              }
             },
             child: const Text('ホームに戻る'),
           ),

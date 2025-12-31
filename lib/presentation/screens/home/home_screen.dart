@@ -4,6 +4,8 @@ import '../../../core/app_theme.dart';
 import '../../providers/match_provider.dart';
 import '../match/match_screen.dart';
 import '../rulebook/rulebook_screen.dart';
+import '../new_match/new_match_screen.dart';
+import '../history/match_history_screen.dart';
 
 /// ホーム画面
 class HomeScreen extends ConsumerWidget {
@@ -17,7 +19,7 @@ class HomeScreen extends ConsumerWidget {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Center(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -27,7 +29,7 @@ class HomeScreen extends ConsumerWidget {
                 width: 150,
                 height: 150,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  color: AppTheme.primaryColor.withAlpha(26),
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: AppTheme.primaryColor,
@@ -95,6 +97,17 @@ class HomeScreen extends ConsumerWidget {
                   label: const Text('ルールブックを見る'),
                 ),
               ),
+              const SizedBox(height: 8),
+              
+              // 試合履歴ボタン
+              SizedBox(
+                width: double.infinity,
+                child: TextButton.icon(
+                  onPressed: () => _openMatchHistory(context),
+                  icon: const Icon(Icons.history),
+                  label: const Text('試合履歴を見る'),
+                ),
+              ),
             ],
           ),
         ),
@@ -103,7 +116,10 @@ class HomeScreen extends ConsumerWidget {
   }
 
   void _startNewMatch(BuildContext context, WidgetRef ref) {
-    _showTeamNameDialog(context, ref);
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const NewMatchScreen()),
+    );
   }
 
   void _openRulebook(BuildContext context) {
@@ -113,71 +129,18 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
+  void _openMatchHistory(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const MatchHistoryScreen()),
+    );
+  }
+
   void _startDemoMatch(BuildContext context, WidgetRef ref) {
     ref.read(matchProvider.notifier).startDemoMatch();
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const MatchScreen()),
-    );
-  }
-
-  void _showTeamNameDialog(BuildContext context, WidgetRef ref) {
-    final teamAController = TextEditingController();
-    final teamBController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('チーム名を入力'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: teamAController,
-              decoration: const InputDecoration(
-                labelText: 'チームA',
-                prefixIcon: Icon(Icons.group, color: AppTheme.teamAColor),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: teamBController,
-              decoration: const InputDecoration(
-                labelText: 'チームB',
-                prefixIcon: Icon(Icons.group, color: AppTheme.teamBColor),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('キャンセル'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final teamAName = teamAController.text.isEmpty
-                  ? 'チームA'
-                  : teamAController.text;
-              final teamBName = teamBController.text.isEmpty
-                  ? 'チームB'
-                  : teamBController.text;
-
-              ref.read(matchProvider.notifier).startNewMatch(
-                    teamAName: teamAName,
-                    teamBName: teamBName,
-                  );
-
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const MatchScreen()),
-              );
-            },
-            child: const Text('開始'),
-          ),
-        ],
-      ),
     );
   }
 }
