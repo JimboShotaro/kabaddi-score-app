@@ -2,25 +2,25 @@
 class KabaddiRules {
   /// 1チームのコート上最大人数
   static const int maxPlayersOnCourt = 7;
-  
+
   /// 1チームの登録選手数
   static const int squadSize = 12;
-  
+
   /// 1ハーフの時間（秒）
   static const int halfDurationSeconds = 20 * 60; // 20分
-  
+
   /// レイドの制限時間（秒）
   static const int raidTimeLimit = 30;
-  
+
   /// ボーナスライン通過条件：守備側6人以上
   static const int bonusLineMinDefenders = 6;
-  
+
   /// スーパータックル条件：守備側3人以下
   static const int superTackleMaxDefenders = 3;
-  
+
   /// ローナボーナスポイント
   static const int lonaBonus = 2;
-  
+
   /// スーパータックルボーナス
   static const int superTackleBonus = 1;
 }
@@ -29,12 +29,16 @@ class KabaddiRules {
 enum CourtArea {
   /// ロビー（両サイド）
   lobby,
+
   /// ボークライン
   baulkLine,
+
   /// ボーナスライン
   bonusLine,
+
   /// ミッドライン
   midLine,
+
   /// エンドライン
   endLine,
 }

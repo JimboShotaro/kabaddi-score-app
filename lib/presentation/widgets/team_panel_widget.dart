@@ -8,6 +8,7 @@ class TeamPanelWidget extends StatelessWidget {
   final Color teamColor;
   final Set<String> selectedPlayerIds;
   final void Function(String playerId) onPlayerTap;
+  final void Function(String playerId)? onPlayerLongPress;
 
   const TeamPanelWidget({
     super.key,
@@ -16,18 +17,19 @@ class TeamPanelWidget extends StatelessWidget {
     required this.teamColor,
     required this.selectedPlayerIds,
     required this.onPlayerTap,
+    this.onPlayerLongPress,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: isRaiding ? teamColor.withOpacity(0.05) : null,
+      color: isRaiding ? teamColor.withValues(alpha: 13) : null,
       child: Column(
         children: [
           // ヘッダー
           Container(
             padding: const EdgeInsets.all(12),
-            color: teamColor.withOpacity(0.1),
+            color: teamColor.withValues(alpha: 26),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -47,7 +49,7 @@ class TeamPanelWidget extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // 選手リスト
           Expanded(
             child: ListView(
@@ -56,14 +58,27 @@ class TeamPanelWidget extends StatelessWidget {
                 // アクティブ選手
                 if (team.activePlayers.isNotEmpty) ...[
                   _buildSectionHeader('コート上', Icons.check_circle, Colors.green),
-                  ...team.activePlayers.map((player) => _buildPlayerTile(player)),
+                  ...team.activePlayers.map(
+                    (player) => _buildPlayerTile(player),
+                  ),
                 ],
-                
+
                 // アウト選手
                 if (team.outPlayers.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   _buildSectionHeader('アウト', Icons.cancel, Colors.red),
                   ...team.outPlayers.map((player) => _buildPlayerTile(player)),
+                ],
+
+                // 控え選手
+                if (team.benchPlayers.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  _buildSectionHeader(
+                    '控え',
+                    Icons.event_seat,
+                    Colors.blueGrey,
+                  ),
+                  ...team.benchPlayers.map((player) => _buildPlayerTile(player)),
                 ],
               ],
             ),
@@ -100,12 +115,16 @@ class TeamPanelWidget extends StatelessWidget {
     return Card(
       elevation: isSelected ? 4 : 1,
       color: isSelected
-          ? teamColor.withOpacity(0.2)
+          ? teamColor.withValues(alpha: 51)
           : isActive
-              ? null
-              : Colors.grey[200],
+          ? null
+          : Colors.grey[200],
       child: InkWell(
         onTap: isActive ? () => onPlayerTap(player.id) : null,
+        onLongPress:
+            isActive && onPlayerLongPress != null
+                ? () => onPlayerLongPress!(player.id)
+                : null,
         borderRadius: BorderRadius.circular(8),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -130,7 +149,7 @@ class TeamPanelWidget extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              
+
               // 選手名
               Expanded(
                 child: Text(
@@ -141,7 +160,7 @@ class TeamPanelWidget extends StatelessWidget {
                   ),
                 ),
               ),
-              
+
               // 選択状態アイコン
               if (isSelected)
                 Icon(

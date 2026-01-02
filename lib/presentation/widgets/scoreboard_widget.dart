@@ -7,10 +7,7 @@ import 'timer_widget.dart';
 class ScoreboardWidget extends StatelessWidget {
   final MatchState matchState;
 
-  const ScoreboardWidget({
-    super.key,
-    required this.matchState,
-  });
+  const ScoreboardWidget({super.key, required this.matchState});
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +32,7 @@ class ScoreboardWidget extends StatelessWidget {
             color: AppTheme.teamAColor,
             isRaiding: matchState.raidingTeamId == matchState.teamA.id,
           ),
-          
+
           // VS
           Column(
             children: [
@@ -51,7 +48,10 @@ class ScoreboardWidget extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
                   borderRadius: BorderRadius.circular(12),
@@ -63,7 +63,7 @@ class ScoreboardWidget extends StatelessWidget {
               ),
             ],
           ),
-          
+
           // チームB
           _buildTeamScore(
             context,
@@ -117,7 +117,7 @@ class ScoreboardWidget extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        
+
         // スコア
         Text(
           '$score',
@@ -127,14 +127,11 @@ class ScoreboardWidget extends StatelessWidget {
             color: color,
           ),
         ),
-        
+
         // アクティブ人数
         Text(
           '${team.activeCount}人 / 7人',
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
+          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
         ),
       ],
     );

@@ -25,7 +25,7 @@ class TimerWidget extends ConsumerWidget {
             color: timerState.isLowTime ? Colors.red : Colors.black87,
           ),
           const SizedBox(width: 8),
-          
+
           // 時間表示
           Text(
             timerState.displayTime,
@@ -37,12 +37,10 @@ class TimerWidget extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: 8),
-          
+
           // 再生/一時停止ボタン
           IconButton(
-            icon: Icon(
-              timerState.isRunning ? Icons.pause : Icons.play_arrow,
-            ),
+            icon: Icon(timerState.isRunning ? Icons.pause : Icons.play_arrow),
             onPressed: () {
               if (timerState.isRunning) {
                 ref.read(matchTimerProvider.notifier).pause();
@@ -51,7 +49,7 @@ class TimerWidget extends ConsumerWidget {
               }
             },
           ),
-          
+
           // リセットボタン
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -84,7 +82,7 @@ class CompactTimerWidget extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         decoration: BoxDecoration(
-          color: timerState.isLowTime 
+          color: timerState.isLowTime
               ? Colors.red.withAlpha(200)
               : Colors.black54,
           borderRadius: BorderRadius.circular(16),

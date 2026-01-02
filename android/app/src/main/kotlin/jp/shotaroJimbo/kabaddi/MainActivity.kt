@@ -1,4 +1,4 @@
-package com.example.kabaddi_app
+package jp.shotaroJimbo.kabaddi
 
 import io.flutter.embedding.android.FlutterActivity
 

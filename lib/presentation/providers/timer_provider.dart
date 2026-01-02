@@ -50,11 +50,13 @@ class MatchTimerNotifier extends StateNotifier<TimerState> {
   void Function(TimerExpiredEvent)? onTimerExpired;
 
   MatchTimerNotifier()
-      : super(const TimerState(
+    : super(
+        const TimerState(
           remainingSeconds: KabaddiRules.halfDurationSeconds,
           isRunning: false,
           isRaidTimer: false,
-        ));
+        ),
+      );
 
   /// コールバックを設定
   void setOnTimerExpired(void Function(TimerExpiredEvent)? callback) {
@@ -123,10 +125,10 @@ class MatchTimerNotifier extends StateNotifier<TimerState> {
       } else {
         _cancelTimer();
         state = state.copyWith(isRunning: false, hasExpired: true);
-        
+
         // コールバックを呼び出し
-        final event = state.isRaidTimer 
-            ? TimerExpiredEvent.raidTimeUp 
+        final event = state.isRaidTimer
+            ? TimerExpiredEvent.raidTimeUp
             : TimerExpiredEvent.halfEnded;
         onTimerExpired?.call(event);
       }
@@ -148,5 +150,5 @@ class MatchTimerNotifier extends StateNotifier<TimerState> {
 /// タイマーのProvider
 final matchTimerProvider =
     StateNotifierProvider<MatchTimerNotifier, TimerState>((ref) {
-  return MatchTimerNotifier();
-});
+      return MatchTimerNotifier();
+    });

@@ -13,11 +13,7 @@ import 'package:kabaddi_app/main.dart';
 void main() {
   testWidgets('App starts correctly', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(
-      const ProviderScope(
-        child: KabaddiApp(),
-      ),
-    );
+    await tester.pumpWidget(const ProviderScope(child: KabaddiApp()));
 
     // Verify that our app shows the home screen
     expect(find.text('カバディスコア'), findsWidgets);

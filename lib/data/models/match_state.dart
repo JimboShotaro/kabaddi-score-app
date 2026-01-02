@@ -6,34 +6,34 @@ import 'raid_result.dart';
 class MatchState extends Equatable {
   /// チームA
   final Team teamA;
-  
+
   /// チームB
   final Team teamB;
-  
+
   /// チームAのスコア
   final int scoreA;
-  
+
   /// チームBのスコア
   final int scoreB;
-  
+
   /// 現在のハーフ（1 or 2）
   final int currentHalf;
-  
+
   /// 現在攻撃中（レイド中）のチームID
   final String? raidingTeamId;
-  
+
   /// 現在のレイド番号
   final int raidNumber;
-  
+
   /// アウト順序のカウンター
   final int outOrderCounter;
-  
+
   /// レイドログ
   final List<RaidResult> raidLogs;
-  
+
   /// ローナ発生回数（チームA）
   final int lonaCountA;
-  
+
   /// ローナ発生回数（チームB）
   final int lonaCountB;
 
@@ -109,16 +109,16 @@ class MatchState extends Equatable {
 
   @override
   List<Object?> get props => [
-        teamA,
-        teamB,
-        scoreA,
-        scoreB,
-        currentHalf,
-        raidingTeamId,
-        raidNumber,
-        outOrderCounter,
-        raidLogs,
-        lonaCountA,
-        lonaCountB,
-      ];
+    teamA,
+    teamB,
+    scoreA,
+    scoreB,
+    currentHalf,
+    raidingTeamId,
+    raidNumber,
+    outOrderCounter,
+    raidLogs,
+    lonaCountA,
+    lonaCountB,
+  ];
 }

@@ -2,13 +2,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/match_repository.dart';
+import '../../data/repositories/roster_repository.dart';
 import '../../domain/engine/match_engine.dart';
 
 /// MatchEngineのProvider
 final matchEngineProvider = Provider<MatchEngine>((ref) => MatchEngine());
 
 /// MatchRepositoryのProvider
-final matchRepositoryProvider = Provider<MatchRepository>((ref) => MatchRepository());
+final matchRepositoryProvider = Provider<MatchRepository>(
+  (ref) => MatchRepository(),
+);
+
+/// RosterRepositoryのProvider
+final rosterRepositoryProvider = Provider<RosterRepository>(
+  (ref) => RosterRepository(),
+);
 
 /// UUIDジェネレーター
 const _uuid = Uuid();
@@ -25,22 +33,19 @@ class MatchNotifier extends StateNotifier<MatchState?> {
   MatchNotifier(this._engine, this._repository) : super(null);
 
   /// 新しい試合を開始
-  void startNewMatch({
-    required String teamAName,
-    required String teamBName,
-  }) {
+  void startNewMatch({required String teamAName, required String teamBName}) {
     final teamA = _createTeam(teamAName);
     final teamB = _createTeam(teamBName);
-    
+
     _currentMatchId = _uuid.v4();
     _matchStartTime = DateTime.now();
-    
+
     state = _engine.createInitialState(
       teamA: teamA,
       teamB: teamB,
       startingRaidTeamId: teamA.id,
     );
-    
+
     // 試合開始を保存
     _saveMatchProgress();
   }
@@ -49,22 +54,19 @@ class MatchNotifier extends StateNotifier<MatchState?> {
   void initializeMatch(Team teamA, Team teamB) {
     _currentMatchId = _uuid.v4();
     _matchStartTime = DateTime.now();
-    
+
     state = _engine.createInitialState(
       teamA: teamA,
       teamB: teamB,
       startingRaidTeamId: teamA.id,
     );
-    
+
     _saveMatchProgress();
   }
 
   /// テストデータで新しい試合を開始
   void startDemoMatch() {
-    startNewMatch(
-      teamAName: 'レッドイーグルス',
-      teamBName: 'ブルータイガース',
-    );
+    startNewMatch(teamAName: 'レッドイーグルス', teamBName: 'ブルータイガース');
   }
 
   /// レイド結果を処理
@@ -80,17 +82,17 @@ class MatchNotifier extends StateNotifier<MatchState?> {
     bool isBonus = false,
   }) {
     if (state == null) return;
-    
+
     final result = RaidResult(
       raiderTeamId: state!.raidingTeamId!,
       raiderId: raiderId,
       touchedDefenderIds: touchedDefenderIds,
       isBonus: isBonus,
-      outcome: touchedDefenderIds.isEmpty 
-          ? RaidOutcome.empty 
+      outcome: touchedDefenderIds.isEmpty
+          ? RaidOutcome.empty
           : RaidOutcome.success,
     );
-    
+
     state = _engine.processRaid(state!, result);
     // 攻守交替
     state = _engine.switchRaidingTeam(state!);
@@ -100,14 +102,14 @@ class MatchNotifier extends StateNotifier<MatchState?> {
   /// 守備成功（タックル）
   void recordTackle({required String raiderId}) {
     if (state == null) return;
-    
+
     final result = RaidResult(
       raiderTeamId: state!.raidingTeamId!,
       raiderId: raiderId,
       isRaiderOut: true,
       outcome: RaidOutcome.tackled,
     );
-    
+
     state = _engine.processRaid(state!, result);
     // 攻守交替
     state = _engine.switchRaidingTeam(state!);
@@ -117,13 +119,13 @@ class MatchNotifier extends StateNotifier<MatchState?> {
   /// 空レイド
   void recordEmptyRaid({required String raiderId}) {
     if (state == null) return;
-    
+
     final result = RaidResult(
       raiderTeamId: state!.raidingTeamId!,
       raiderId: raiderId,
       outcome: RaidOutcome.empty,
     );
-    
+
     state = _engine.processRaid(state!, result);
     // 攻守交替
     state = _engine.switchRaidingTeam(state!);
@@ -143,22 +145,93 @@ class MatchNotifier extends StateNotifier<MatchState?> {
     _saveMatchProgress();
   }
 
+  /// 交代（控え ↔ コート上）
+  Future<void> substitute({
+    required String teamId,
+    required String activePlayerId,
+    required String benchPlayerId,
+  }) async {
+    if (state == null) return;
+
+    final current = state!;
+    final updatedTeamA =
+        current.teamA.id == teamId
+            ? current.teamA.substitute(
+                activePlayerId: activePlayerId,
+                benchPlayerId: benchPlayerId,
+              )
+            : current.teamA;
+    final updatedTeamB =
+        current.teamB.id == teamId
+            ? current.teamB.substitute(
+                activePlayerId: activePlayerId,
+                benchPlayerId: benchPlayerId,
+              )
+            : current.teamB;
+
+    state = current.copyWith(teamA: updatedTeamA, teamB: updatedTeamB);
+    await _saveMatchProgress();
+  }
+
   /// 試合終了
   Future<void> endMatch() async {
     if (state == null || _currentMatchId == null) return;
-    
+
+    final matchId = _currentMatchId!;
+    final now = DateTime.now();
+    final currentState = state!;
+
     final summary = MatchSummary(
-      matchId: _currentMatchId!,
-      teamAName: state!.teamA.name,
-      teamBName: state!.teamB.name,
-      finalScoreA: state!.scoreA,
-      finalScoreB: state!.scoreB,
-      playedAt: _matchStartTime ?? DateTime.now(),
+      matchId: matchId,
+      teamAName: currentState.teamA.name,
+      teamBName: currentState.teamB.name,
+      finalScoreA: currentState.scoreA,
+      finalScoreB: currentState.scoreB,
+      playedAt: _matchStartTime ?? now,
       isCompleted: true,
-      totalRaids: state!.raidNumber,
+      endedAt: now,
+      totalRaids: currentState.raidNumber,
     );
-    
+
     await _repository.saveMatch(summary);
+    await _repository.saveMatchDetail(
+      matchId: matchId,
+      teamA: currentState.teamA,
+      teamB: currentState.teamB,
+      raidLogs: currentState.raidLogs,
+    );
+    _currentMatchId = null;
+    _matchStartTime = null;
+  }
+
+  /// 試合を中断して終了（履歴には「中断」として残す）
+  Future<void> abandonMatch() async {
+    if (state == null || _currentMatchId == null) return;
+
+    final matchId = _currentMatchId!;
+    final now = DateTime.now();
+    final currentState = state!;
+
+    final summary = MatchSummary(
+      matchId: matchId,
+      teamAName: currentState.teamA.name,
+      teamBName: currentState.teamB.name,
+      finalScoreA: currentState.scoreA,
+      finalScoreB: currentState.scoreB,
+      playedAt: _matchStartTime ?? now,
+      isCompleted: false,
+      endedAt: now,
+      totalRaids: currentState.raidNumber,
+    );
+
+    await _repository.saveMatch(summary);
+    await _repository.saveMatchDetail(
+      matchId: matchId,
+      teamA: currentState.teamA,
+      teamB: currentState.teamB,
+      raidLogs: currentState.raidLogs,
+    );
+
     _currentMatchId = null;
     _matchStartTime = null;
   }
@@ -173,19 +246,29 @@ class MatchNotifier extends StateNotifier<MatchState?> {
   /// 試合の進行状況を保存
   Future<void> _saveMatchProgress() async {
     if (state == null || _currentMatchId == null) return;
-    
+
+    final matchId = _currentMatchId!;
+    final currentState = state!;
+
     final summary = MatchSummary(
-      matchId: _currentMatchId!,
-      teamAName: state!.teamA.name,
-      teamBName: state!.teamB.name,
-      finalScoreA: state!.scoreA,
-      finalScoreB: state!.scoreB,
+      matchId: matchId,
+      teamAName: currentState.teamA.name,
+      teamBName: currentState.teamB.name,
+      finalScoreA: currentState.scoreA,
+      finalScoreB: currentState.scoreB,
       playedAt: _matchStartTime ?? DateTime.now(),
       isCompleted: false,
-      totalRaids: state!.raidNumber,
+      endedAt: null,
+      totalRaids: currentState.raidNumber,
     );
-    
+
     await _repository.saveMatch(summary);
+    await _repository.saveMatchDetail(
+      matchId: matchId,
+      teamA: currentState.teamA,
+      teamB: currentState.teamB,
+      raidLogs: currentState.raidLogs,
+    );
   }
 
   /// チームを作成
@@ -193,11 +276,8 @@ class MatchNotifier extends StateNotifier<MatchState?> {
     final teamId = _uuid.v4();
     final players = List.generate(
       7,
-      (i) => Player(
-        id: _uuid.v4(),
-        name: '$name ${i + 1}',
-        jerseyNumber: i + 1,
-      ),
+      (i) =>
+          Player(id: _uuid.v4(), name: '$name ${i + 1}', jerseyNumber: i + 1),
     );
     return Team(id: teamId, name: name, players: players);
   }

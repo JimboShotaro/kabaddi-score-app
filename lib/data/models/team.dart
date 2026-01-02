@@ -7,15 +7,15 @@ class Team extends Equatable {
   final String name;
   final List<Player> players;
 
-  const Team({
-    required this.id,
-    required this.name,
-    required this.players,
-  });
+  const Team({required this.id, required this.name, required this.players});
 
   /// アクティブな選手のリスト
   List<Player> get activePlayers =>
       players.where((p) => p.status == PlayerStatus.active).toList();
+
+    /// 控え選手のリスト
+    List<Player> get benchPlayers =>
+      players.where((p) => p.status == PlayerStatus.bench).toList();
 
   /// アウト中の選手のリスト（アウト順序でソート）
   List<Player> get outPlayers {
@@ -47,6 +47,31 @@ class Team extends Equatable {
     return updatePlayer(player.markAsOut(outOrder));
   }
 
+  /// 交代（コート上の選手と控え選手を入れ替える）
+  Team substitute({
+    required String activePlayerId,
+    required String benchPlayerId,
+  }) {
+    final activePlayer = players.firstWhere((p) => p.id == activePlayerId);
+    final benchPlayer = players.firstWhere((p) => p.id == benchPlayerId);
+
+    if (activePlayer.status != PlayerStatus.active) return this;
+    if (benchPlayer.status != PlayerStatus.bench) return this;
+
+    final updatedActive = activePlayer.moveToBench();
+    final updatedBench = benchPlayer.moveToActive();
+
+    return copyWith(
+      players: players
+          .map((p) {
+            if (p.id == updatedActive.id) return updatedActive;
+            if (p.id == updatedBench.id) return updatedBench;
+            return p;
+          })
+          .toList(),
+    );
+  }
+
   /// 最も早くアウトになった選手を復活させる
   Team reviveOldestOutPlayer() {
     if (outPlayers.isEmpty) return this;
@@ -74,11 +99,25 @@ class Team extends Equatable {
     return Team(id: id, name: name, players: revivedPlayers);
   }
 
-  Team copyWith({
-    String? id,
-    String? name,
-    List<Player>? players,
-  }) {
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'players': players.map((p) => p.toJson()).toList(),
+    };
+  }
+
+  factory Team.fromJson(Map<String, dynamic> json) {
+    return Team(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      players: (json['players'] as List<dynamic>? ?? const [])
+          .map((e) => Player.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  Team copyWith({String? id, String? name, List<Player>? players}) {
     return Team(
       id: id ?? this.id,
       name: name ?? this.name,

@@ -18,10 +18,10 @@ class MatchScreen extends ConsumerStatefulWidget {
 class _MatchScreenState extends ConsumerState<MatchScreen> {
   // 選択された守備選手（タッチされた選手）
   final Set<String> _selectedDefenders = {};
-  
+
   // 現在のレイダー
   String? _currentRaiderId;
-  
+
   // ボーナス獲得フラグ
   bool _isBonus = false;
 
@@ -36,32 +36,47 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('第${matchState.currentHalf}ハーフ - レイド #${matchState.raidNumber + 1}'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _resetSelection,
-            tooltip: '選択をリセット',
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        await _showAbandonMatchDialog(matchState);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            '第${matchState.currentHalf}ハーフ - レイド #${matchState.raidNumber + 1}',
           ),
-          PopupMenuButton<String>(
-            onSelected: (value) => _handleMenuAction(value, matchState),
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 'switch_half', child: Text('ハーフを変更')),
-              const PopupMenuItem(value: 'end_match', child: Text('試合終了')),
-            ],
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _resetSelection,
+              tooltip: '選択をリセット',
+            ),
+            PopupMenuButton<String>(
+              onSelected: (value) => _handleMenuAction(value, matchState),
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'switch_half',
+                  child: Text('ハーフを変更'),
+                ),
+                const PopupMenuItem(
+                  value: 'abandon_match',
+                  child: Text('中断して終了'),
+                ),
+                const PopupMenuItem(value: 'end_match', child: Text('試合終了')),
+              ],
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
           // スコアボード
           ScoreboardWidget(matchState: matchState),
-          
+
           const Divider(height: 1),
-          
+
           // チームパネル
           Expanded(
             child: Row(
@@ -72,7 +87,8 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                     team: matchState.teamA,
                     isRaiding: matchState.raidingTeamId == matchState.teamA.id,
                     teamColor: AppTheme.teamAColor,
-                    selectedPlayerIds: matchState.raidingTeamId == matchState.teamA.id
+                    selectedPlayerIds:
+                        matchState.raidingTeamId == matchState.teamA.id
                         ? {if (_currentRaiderId != null) _currentRaiderId!}
                         : _selectedDefenders,
                     onPlayerTap: (playerId) => _handlePlayerTap(
@@ -80,22 +96,24 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                       matchState.raidingTeamId == matchState.teamA.id,
                       matchState,
                     ),
+                    onPlayerLongPress: (playerId) => _showSubstitutionSheet(
+                      team: matchState.teamA,
+                      activePlayerId: playerId,
+                    ),
                   ),
                 ),
-                
+
                 // 中央区切り
-                Container(
-                  width: 2,
-                  color: Colors.grey[300],
-                ),
-                
+                Container(width: 2, color: Colors.grey[300]),
+
                 // チームB
                 Expanded(
                   child: TeamPanelWidget(
                     team: matchState.teamB,
                     isRaiding: matchState.raidingTeamId == matchState.teamB.id,
                     teamColor: AppTheme.teamBColor,
-                    selectedPlayerIds: matchState.raidingTeamId == matchState.teamB.id
+                    selectedPlayerIds:
+                        matchState.raidingTeamId == matchState.teamB.id
                         ? {if (_currentRaiderId != null) _currentRaiderId!}
                         : _selectedDefenders,
                     onPlayerTap: (playerId) => _handlePlayerTap(
@@ -103,23 +121,29 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                       matchState.raidingTeamId == matchState.teamB.id,
                       matchState,
                     ),
+                    onPlayerLongPress: (playerId) => _showSubstitutionSheet(
+                      team: matchState.teamB,
+                      activePlayerId: playerId,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          
+
           // レイドアクションパネル
-          RaidActionWidget(
-            raiderId: _currentRaiderId,
-            touchedCount: _selectedDefenders.length,
-            isBonus: _isBonus,
-            onBonusChanged: (value) => setState(() => _isBonus = value),
-            onRaidSuccess: _currentRaiderId != null ? _recordRaidSuccess : null,
-            onTackle: _currentRaiderId != null ? _recordTackle : null,
-            onEmptyRaid: _currentRaiderId != null ? _recordEmptyRaid : null,
-          ),
-        ],
+            RaidActionWidget(
+              raiderId: _currentRaiderId,
+              touchedCount: _selectedDefenders.length,
+              isBonus: _isBonus,
+              onBonusChanged: (value) => setState(() => _isBonus = value),
+              onRaidSuccess:
+                  _currentRaiderId != null ? _recordRaidSuccess : null,
+              onTackle: _currentRaiderId != null ? _recordTackle : null,
+              onEmptyRaid: _currentRaiderId != null ? _recordEmptyRaid : null,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -128,13 +152,32 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
     setState(() {
       if (isRaidingTeam) {
         // 攻撃チームの選手：レイダーとして選択
-        final player = state.raidingTeam!.players.firstWhere((p) => p.id == playerId);
+        final player = state.raidingTeam!.players.firstWhere(
+          (p) => p.id == playerId,
+        );
         if (player.status == PlayerStatus.active) {
-          _currentRaiderId = playerId;
+          // レイダー変更時は、タッチ選択/ボーナスをリセットして混乱を防ぐ
+          if (_currentRaiderId == playerId) {
+            _currentRaiderId = null;
+          } else {
+            _currentRaiderId = playerId;
+          }
+          _selectedDefenders.clear();
+          _isBonus = false;
         }
       } else {
+        // レイダー未選択時は、先にレイダー選択を促す
+        if (_currentRaiderId == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _showResultSnackBar('先に攻撃チームからレイダーを選択してください');
+          });
+          return;
+        }
+
         // 守備チームの選手：タッチ対象として選択/解除
-        final player = state.defendingTeam!.players.firstWhere((p) => p.id == playerId);
+        final player = state.defendingTeam!.players.firstWhere(
+          (p) => p.id == playerId,
+        );
         if (player.status == PlayerStatus.active) {
           if (_selectedDefenders.contains(playerId)) {
             _selectedDefenders.remove(playerId);
@@ -148,31 +191,35 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
 
   void _recordRaidSuccess() {
     if (_currentRaiderId == null) return;
-    
-    ref.read(matchProvider.notifier).recordSuccessfulRaid(
-      raiderId: _currentRaiderId!,
-      touchedDefenderIds: _selectedDefenders.toList(),
-      isBonus: _isBonus,
-    );
-    
+
+    ref
+        .read(matchProvider.notifier)
+        .recordSuccessfulRaid(
+          raiderId: _currentRaiderId!,
+          touchedDefenderIds: _selectedDefenders.toList(),
+          isBonus: _isBonus,
+        );
+
     _resetSelection();
     _showResultSnackBar('レイド成功！');
   }
 
   void _recordTackle() {
     if (_currentRaiderId == null) return;
-    
+
     ref.read(matchProvider.notifier).recordTackle(raiderId: _currentRaiderId!);
-    
+
     _resetSelection();
     _showResultSnackBar('タックル成功！');
   }
 
   void _recordEmptyRaid() {
     if (_currentRaiderId == null) return;
-    
-    ref.read(matchProvider.notifier).recordEmptyRaid(raiderId: _currentRaiderId!);
-    
+
+    ref
+        .read(matchProvider.notifier)
+        .recordEmptyRaid(raiderId: _currentRaiderId!);
+
     _resetSelection();
     _showResultSnackBar('空レイド');
   }
@@ -192,9 +239,40 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
         _resetSelection();
         _showResultSnackBar('ハーフを変更しました');
         break;
+      case 'abandon_match':
+        _showAbandonMatchDialog(state);
+        break;
       case 'end_match':
         _showEndMatchDialog(state);
         break;
+    }
+  }
+
+  Future<void> _showAbandonMatchDialog(MatchState state) async {
+    final shouldAbandon = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('試合を中断しますか？'),
+        content: const Text('現在のスコアとログを保存して「中断」として履歴に残します。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('続ける'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('中断してホームへ'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldAbandon != true) return;
+
+    await ref.read(matchProvider.notifier).abandonMatch();
+    ref.read(matchProvider.notifier).resetMatch();
+    if (mounted) {
+      Navigator.pop(context);
     }
   }
 
@@ -213,12 +291,9 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
               state.scoreA > state.scoreB
                   ? '${state.teamA.name} の勝利！'
                   : state.scoreB > state.scoreA
-                      ? '${state.teamB.name} の勝利！'
-                      : '引き分け',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
+                  ? '${state.teamB.name} の勝利！'
+                  : '引き分け',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
           ],
         ),
@@ -246,10 +321,54 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
 
   void _showResultSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 1),
-      ),
+      SnackBar(content: Text(message), duration: const Duration(seconds: 1)),
+    );
+  }
+
+  void _showSubstitutionSheet({
+    required Team team,
+    required String activePlayerId,
+  }) {
+    final bench = team.benchPlayers;
+    if (bench.isEmpty) {
+      _showResultSnackBar('控え選手がいません');
+      return;
+    }
+
+    final active = team.players.firstWhere((p) => p.id == activePlayerId);
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('交代'),
+                subtitle: Text('OUT: ${active.name}'),
+              ),
+              for (final benchPlayer in bench)
+                ListTile(
+                  leading: const Icon(Icons.event_seat),
+                  title: Text(benchPlayer.name),
+                  subtitle: Text('背番号 ${benchPlayer.jerseyNumber}'),
+                  onTap: () async {
+                    await ref.read(matchProvider.notifier).substitute(
+                          teamId: team.id,
+                          activePlayerId: activePlayerId,
+                          benchPlayerId: benchPlayer.id,
+                        );
+                    if (context.mounted) Navigator.pop(context);
+                    _resetSelection();
+                    _showResultSnackBar('交代しました');
+                  },
+                ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -1,10 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="kabaddi_app"
+        android:label="カバディーアプリ"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
-            android:name=".MainActivity"
+            android:name="jp.shotaroJimbo.kabaddi.MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
             android:taskAffinity=""

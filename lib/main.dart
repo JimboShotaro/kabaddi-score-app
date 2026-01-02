@@ -4,11 +4,7 @@ import 'core/app_theme.dart';
 import 'presentation/screens/home/home_screen.dart';
 
 void main() {
-  runApp(
-    const ProviderScope(
-      child: KabaddiApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: KabaddiApp()));
 }
 
 class KabaddiApp extends StatelessWidget {

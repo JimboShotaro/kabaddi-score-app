@@ -40,18 +40,12 @@ class _RulebookScreenState extends State<RulebookScreen> {
               ),
             ),
           ),
-          
+
           // 説明パネル
-          Expanded(
-            flex: 1,
-            child: _buildExplanationPanel(),
-          ),
-          
+          Expanded(flex: 1, child: _buildExplanationPanel()),
+
           // ルール一覧
-          Expanded(
-            flex: 2,
-            child: _buildRulesList(),
-          ),
+          Expanded(flex: 2, child: _buildRulesList()),
         ],
       ),
     );
@@ -127,16 +121,10 @@ class _RulebookScreenState extends State<RulebookScreen> {
               onTap: () => setState(() => _selectedArea = area),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                color: isSelected 
-                    ? color.withAlpha(150)
-                    : Colors.transparent,
+                color: isSelected ? color.withAlpha(150) : Colors.transparent,
                 child: isSelected
                     ? Center(
-                        child: Icon(
-                          Icons.info,
-                          color: Colors.white,
-                          size: 24,
-                        ),
+                        child: Icon(Icons.info, color: Colors.white, size: 24),
                       )
                     : null,
               ),
@@ -155,10 +143,7 @@ class _RulebookScreenState extends State<RulebookScreen> {
           child: Text(
             'コート上のエリアをタップして\nルールの説明を見てみましょう',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey),
           ),
         ),
       );
@@ -213,43 +198,50 @@ class _RulebookScreenState extends State<RulebookScreen> {
       {
         'title': '基本ルール',
         'icon': Icons.book,
-        'content': '1チーム7人がコート上でプレー。攻撃側は1人のレイダーを送り込み、'
+        'content':
+            '1チーム7人がコート上でプレー。攻撃側は1人のレイダーを送り込み、'
             '守備側の選手にタッチして戻ることで得点を獲得します。',
       },
       {
         'title': 'タッチポイント',
         'icon': Icons.touch_app,
-        'content': 'レイダーがタッチした守備選手1人につき1ポイント獲得。'
+        'content':
+            'レイダーがタッチした守備選手1人につき1ポイント獲得。'
             'タッチされた選手はアウトになります。',
       },
       {
         'title': 'ボーナスポイント',
         'icon': Icons.star,
-        'content': '守備側が6人以上いる場合、レイダーがボーナスラインを越えると'
+        'content':
+            '守備側が6人以上いる場合、レイダーがボーナスラインを越えると'
             '+1ポイント獲得できます。',
       },
       {
         'title': 'タックル',
         'icon': Icons.sports_mma,
-        'content': '守備側がレイダーを捕まえて自陣に戻らせなかった場合、'
+        'content':
+            '守備側がレイダーを捕まえて自陣に戻らせなかった場合、'
             '守備側に1ポイント。レイダーはアウトになります。',
       },
       {
         'title': 'スーパータックル',
         'icon': Icons.flash_on,
-        'content': '守備側が3人以下の状態でタックル成功すると、'
+        'content':
+            '守備側が3人以下の状態でタックル成功すると、'
             '通常の1点に加えてボーナス1点、計2点獲得！',
       },
       {
         'title': '復活',
         'icon': Icons.refresh,
-        'content': '得点を獲得すると、アウトになった味方選手が復活します。'
+        'content':
+            '得点を獲得すると、アウトになった味方選手が復活します。'
             '先にアウトになった選手から順番に復活します。',
       },
       {
         'title': 'ローナ',
         'icon': Icons.celebration,
-        'content': '相手チーム全員をアウトにすると「ローナ」となり、'
+        'content':
+            '相手チーム全員をアウトにすると「ローナ」となり、'
             '+2ポイントのボーナスを獲得。相手チーム全員が復活します。',
       },
     ];
@@ -261,7 +253,10 @@ class _RulebookScreenState extends State<RulebookScreen> {
         final rule = rules[index];
         return Card(
           child: ExpansionTile(
-            leading: Icon(rule['icon'] as IconData, color: AppTheme.primaryColor),
+            leading: Icon(
+              rule['icon'] as IconData,
+              color: AppTheme.primaryColor,
+            ),
             title: Text(
               rule['title'] as String,
               style: const TextStyle(fontWeight: FontWeight.bold),

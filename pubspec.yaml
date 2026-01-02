@@ -46,6 +46,9 @@ dependencies:
   # ローカルストレージ
   shared_preferences: ^2.3.5
 
+  # 通信（手動同期）
+  http: ^1.2.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

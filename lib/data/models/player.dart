@@ -4,8 +4,10 @@ import 'package:equatable/equatable.dart';
 enum PlayerStatus {
   /// コート上で活動中
   active,
+
   /// アウトでベンチ待機中
   out,
+
   /// 試合に参加していない（控え）
   bench,
 }
@@ -45,6 +47,50 @@ class Player extends Equatable {
       jerseyNumber: jerseyNumber,
       status: PlayerStatus.active,
       outOrder: 0,
+    );
+  }
+
+  /// 控えにする
+  Player moveToBench() {
+    return Player(
+      id: id,
+      name: name,
+      jerseyNumber: jerseyNumber,
+      status: PlayerStatus.bench,
+      outOrder: 0,
+    );
+  }
+
+  /// 先発（コート上）にする
+  Player moveToActive() {
+    return Player(
+      id: id,
+      name: name,
+      jerseyNumber: jerseyNumber,
+      status: PlayerStatus.active,
+      outOrder: 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'jerseyNumber': jerseyNumber,
+      'status': status.name,
+      'outOrder': outOrder,
+    };
+  }
+
+  factory Player.fromJson(Map<String, dynamic> json) {
+    return Player(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      jerseyNumber: json['jerseyNumber'] as int,
+      status: PlayerStatus.values.byName(
+        (json['status'] as String?) ?? PlayerStatus.active.name,
+      ),
+      outOrder: json['outOrder'] as int? ?? 0,
     );
   }
 

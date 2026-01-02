@@ -64,7 +64,7 @@ class CourtPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final width = size.width;
     final height = size.height;
-    
+
     // コート全体の背景
     final courtPaint = Paint()
       ..color = AppTheme.courtColor
@@ -85,11 +85,7 @@ class CourtPainter extends CustomPainter {
 
     // ミッドライン（中央線）
     final midX = width / 2;
-    canvas.drawLine(
-      Offset(midX, 0),
-      Offset(midX, height),
-      thickLinePaint,
-    );
+    canvas.drawLine(Offset(midX, 0), Offset(midX, height), thickLinePaint);
 
     // ボークライン（両側、ミッドラインから約1/4の位置）
     final baulkOffset = width * 0.125;
@@ -112,7 +108,7 @@ class CourtPainter extends CustomPainter {
       ..color = Colors.yellow
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
-    
+
     // チームA側ボーナスライン
     _drawDashedLine(
       canvas,
@@ -129,22 +125,16 @@ class CourtPainter extends CustomPainter {
     );
 
     // エンドライン（外枠）
-    canvas.drawRect(
-      Rect.fromLTWH(1, 1, width - 2, height - 2),
-      thickLinePaint,
-    );
+    canvas.drawRect(Rect.fromLTWH(1, 1, width - 2, height - 2), thickLinePaint);
 
     // ロビーエリア（両端）
     final lobbyWidth = width * 0.08;
     final lobbyPaint = Paint()
       ..color = Colors.brown.withAlpha(80)
       ..style = PaintingStyle.fill;
-    
+
     // 左ロビー
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, lobbyWidth, height),
-      lobbyPaint,
-    );
+    canvas.drawRect(Rect.fromLTWH(0, 0, lobbyWidth, height), lobbyPaint);
     // 右ロビー
     canvas.drawRect(
       Rect.fromLTWH(width - lobbyWidth, 0, lobbyWidth, height),
@@ -152,21 +142,35 @@ class CourtPainter extends CustomPainter {
     );
 
     // チーム表示
-    _drawTeamLabel(canvas, 'A', midX / 2, height / 2, AppTheme.teamAColor, isTeamARaiding);
-    _drawTeamLabel(canvas, 'B', midX + midX / 2, height / 2, AppTheme.teamBColor, !isTeamARaiding);
+    _drawTeamLabel(
+      canvas,
+      'A',
+      midX / 2,
+      height / 2,
+      AppTheme.teamAColor,
+      isTeamARaiding,
+    );
+    _drawTeamLabel(
+      canvas,
+      'B',
+      midX + midX / 2,
+      height / 2,
+      AppTheme.teamBColor,
+      !isTeamARaiding,
+    );
   }
 
   void _drawDashedLine(Canvas canvas, Offset start, Offset end, Paint paint) {
     const dashLength = 10.0;
     const gapLength = 5.0;
-    
+
     final dx = end.dx - start.dx;
     final dy = end.dy - start.dy;
     final distance = math.sqrt(dx * dx + dy * dy);
-    
+
     final unitDx = dx / distance;
     final unitDy = dy / distance;
-    
+
     var currentDistance = 0.0;
     while (currentDistance < distance) {
       final startOffset = Offset(
@@ -182,7 +186,14 @@ class CourtPainter extends CustomPainter {
     }
   }
 
-  void _drawTeamLabel(Canvas canvas, String label, double x, double y, Color color, bool isRaiding) {
+  void _drawTeamLabel(
+    Canvas canvas,
+    String label,
+    double x,
+    double y,
+    Color color,
+    bool isRaiding,
+  ) {
     final textPainter = TextPainter(
       text: TextSpan(
         text: isRaiding ? '$label\n攻撃' : '$label\n守備',
@@ -190,12 +201,7 @@ class CourtPainter extends CustomPainter {
           color: Colors.white,
           fontSize: 20,
           fontWeight: FontWeight.bold,
-          shadows: [
-            Shadow(
-              color: color,
-              blurRadius: 10,
-            ),
-          ],
+          shadows: [Shadow(color: color, blurRadius: 10)],
         ),
       ),
       textDirection: TextDirection.ltr,

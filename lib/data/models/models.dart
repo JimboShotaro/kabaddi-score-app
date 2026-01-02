@@ -4,3 +4,4 @@ export 'team.dart';
 export 'raid_result.dart';
 export 'match_state.dart';
 export 'match_summary.dart';
+export 'match_detail.dart';

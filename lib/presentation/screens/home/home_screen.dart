@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/app_theme.dart';
+import '../../../core/sync_config.dart';
 import '../../providers/match_provider.dart';
+import '../../providers/sync_provider.dart';
 import '../match/match_screen.dart';
 import '../rulebook/rulebook_screen.dart';
 import '../new_match/new_match_screen.dart';
@@ -31,10 +33,7 @@ class HomeScreen extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: AppTheme.primaryColor.withAlpha(26),
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppTheme.primaryColor,
-                    width: 3,
-                  ),
+                  border: Border.all(color: AppTheme.primaryColor, width: 3),
                 ),
                 child: const Icon(
                   Icons.sports_kabaddi,
@@ -43,7 +42,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 48),
-              
+
               // タイトル
               Text(
                 AppConstants.appName,
@@ -55,12 +54,12 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 8),
               Text(
                 'カバディ競技支援アプリケーション',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
               ),
               const SizedBox(height: 48),
-              
+
               // 新規試合ボタン
               SizedBox(
                 width: double.infinity,
@@ -76,7 +75,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // デモ試合ボタン
               SizedBox(
                 width: double.infinity,
@@ -87,7 +86,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // ルールブックボタン
               SizedBox(
                 width: double.infinity,
@@ -98,7 +97,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              
+
               // 試合履歴ボタン
               SizedBox(
                 width: double.infinity,
@@ -106,6 +105,18 @@ class HomeScreen extends ConsumerWidget {
                   onPressed: () => _openMatchHistory(context),
                   icon: const Icon(Icons.history),
                   label: const Text('試合履歴を見る'),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              // 手動同期ボタン
+              SizedBox(
+                width: double.infinity,
+                child: TextButton.icon(
+                  onPressed: () => _syncToServer(context, ref),
+                  icon: const Icon(Icons.cloud_upload),
+                  label: const Text('手動同期（サーバーへ送信）'),
                 ),
               ),
             ],
@@ -142,5 +153,75 @@ class HomeScreen extends ConsumerWidget {
       context,
       MaterialPageRoute(builder: (_) => const MatchScreen()),
     );
+  }
+
+  Future<void> _syncToServer(BuildContext context, WidgetRef ref) async {
+    final shouldSync = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('手動同期'),
+        content: const Text(
+          '終了した試合（完了/中断）をサーバーへ送信します。\n\n'
+          '接続先: ${SyncConfig.baseUrl}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('キャンセル'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('送信する'),
+          ),
+        ],
+      ),
+    );
+
+    if (!context.mounted) return;
+
+    if (shouldSync != true) return;
+
+    // 進行中表示
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 16),
+            Expanded(child: Text('同期中...')),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      final repo = ref.read(syncRepositoryProvider);
+      final result = await repo.syncEndedMatches(baseUrl: SyncConfig.baseUrl);
+
+      if (!context.mounted) return;
+
+      if (context.mounted) Navigator.pop(context); // close progress
+
+      final message =
+          '同期: ${result.succeeded}/${result.attempted} 件（失敗 ${result.failed} 件）';
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+        );
+      }
+    } catch (e) {
+      if (!context.mounted) return;
+      Navigator.pop(context); // close progress
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('同期に失敗しました: $e'),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 }

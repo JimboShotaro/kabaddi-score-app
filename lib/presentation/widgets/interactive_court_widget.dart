@@ -28,7 +28,7 @@ class InteractiveCourtWidget extends StatelessWidget {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final height = constraints.maxHeight;
-        
+
         return CustomPaint(
           size: Size(width, height),
           painter: _CourtBackgroundPainter(isTeamARaiding: isTeamARaiding),
@@ -69,24 +69,24 @@ class InteractiveCourtWidget extends StatelessWidget {
   ) {
     final activePlayers = team.activePlayers;
     final widgets = <Widget>[];
-    
+
     for (var i = 0; i < activePlayers.length; i++) {
       final player = activePlayers[i];
       final isSelected = selectedPlayerIds.contains(player.id);
       final isRaider = player.id == raiderId;
-      
+
       // 選手の位置を計算（グリッド配置）
       final cols = 3;
       final col = i % cols;
       final row = i ~/ cols;
-      
+
       final xRange = endX - startX;
       final yRange = height * 0.6;
       final yOffset = height * 0.2;
-      
+
       final x = startX + (xRange / (cols + 1)) * (col + 1);
       final y = yOffset + (yRange / 3) * (row + 0.5);
-      
+
       widgets.add(
         Positioned(
           left: x - 24,
@@ -101,11 +101,13 @@ class InteractiveCourtWidget extends StatelessWidget {
                 color: isRaider
                     ? Colors.orange
                     : isSelected
-                        ? Colors.red
-                        : teamColor,
+                    ? Colors.red
+                    : teamColor,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected || isRaider ? Colors.white : teamColor.withAlpha(128),
+                  color: isSelected || isRaider
+                      ? Colors.white
+                      : teamColor.withAlpha(128),
                   width: isSelected || isRaider ? 3 : 2,
                 ),
                 boxShadow: [
@@ -144,7 +146,7 @@ class InteractiveCourtWidget extends StatelessWidget {
         ),
       );
     }
-    
+
     return widgets;
   }
 }
@@ -159,7 +161,7 @@ class _CourtBackgroundPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final width = size.width;
     final height = size.height;
-    
+
     // コート全体の背景
     final courtPaint = Paint()
       ..color = AppTheme.courtColor
@@ -180,11 +182,7 @@ class _CourtBackgroundPainter extends CustomPainter {
 
     // ミッドライン（中央線）
     final midX = width / 2;
-    canvas.drawLine(
-      Offset(midX, 0),
-      Offset(midX, height),
-      thickLinePaint,
-    );
+    canvas.drawLine(Offset(midX, 0), Offset(midX, height), thickLinePaint);
 
     // ボークライン
     final baulkOffset = width * 0.125;
@@ -205,7 +203,7 @@ class _CourtBackgroundPainter extends CustomPainter {
       ..color = Colors.yellow
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
-    
+
     _drawDashedLine(
       canvas,
       Offset(midX - bonusOffset, 0),
@@ -220,42 +218,50 @@ class _CourtBackgroundPainter extends CustomPainter {
     );
 
     // エンドライン
-    canvas.drawRect(
-      Rect.fromLTWH(1, 1, width - 2, height - 2),
-      thickLinePaint,
-    );
+    canvas.drawRect(Rect.fromLTWH(1, 1, width - 2, height - 2), thickLinePaint);
 
     // ロビーエリア
     final lobbyWidth = width * 0.08;
     final lobbyPaint = Paint()
       ..color = Colors.brown.withAlpha(80)
       ..style = PaintingStyle.fill;
-    
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, lobbyWidth, height),
-      lobbyPaint,
-    );
+
+    canvas.drawRect(Rect.fromLTWH(0, 0, lobbyWidth, height), lobbyPaint);
     canvas.drawRect(
       Rect.fromLTWH(width - lobbyWidth, 0, lobbyWidth, height),
       lobbyPaint,
     );
 
     // 攻守表示
-    _drawRoleLabel(canvas, 'A', midX / 2, 20, AppTheme.teamAColor, isTeamARaiding);
-    _drawRoleLabel(canvas, 'B', midX + midX / 2, 20, AppTheme.teamBColor, !isTeamARaiding);
+    _drawRoleLabel(
+      canvas,
+      'A',
+      midX / 2,
+      20,
+      AppTheme.teamAColor,
+      isTeamARaiding,
+    );
+    _drawRoleLabel(
+      canvas,
+      'B',
+      midX + midX / 2,
+      20,
+      AppTheme.teamBColor,
+      !isTeamARaiding,
+    );
   }
 
   void _drawDashedLine(Canvas canvas, Offset start, Offset end, Paint paint) {
     const dashLength = 10.0;
     const gapLength = 5.0;
-    
+
     final dx = end.dx - start.dx;
     final dy = end.dy - start.dy;
     final distance = math.sqrt(dx * dx + dy * dy);
-    
+
     final unitDx = dx / distance;
     final unitDy = dy / distance;
-    
+
     var currentDistance = 0.0;
     while (currentDistance < distance) {
       final startOffset = Offset(
@@ -271,7 +277,14 @@ class _CourtBackgroundPainter extends CustomPainter {
     }
   }
 
-  void _drawRoleLabel(Canvas canvas, String label, double x, double y, Color color, bool isRaiding) {
+  void _drawRoleLabel(
+    Canvas canvas,
+    String label,
+    double x,
+    double y,
+    Color color,
+    bool isRaiding,
+  ) {
     final textPainter = TextPainter(
       text: TextSpan(
         text: isRaiding ? '$label 攻撃' : '$label 守備',

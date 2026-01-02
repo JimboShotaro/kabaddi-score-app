@@ -4,25 +4,28 @@ import 'dart:convert';
 class MatchSummary {
   /// 試合ID
   final String matchId;
-  
+
   /// チームA名
   final String teamAName;
-  
+
   /// チームB名
   final String teamBName;
-  
+
   /// 最終スコアA
   final int finalScoreA;
-  
+
   /// 最終スコアB
   final int finalScoreB;
-  
+
   /// 試合日時
   final DateTime playedAt;
-  
+
   /// 試合完了フラグ
   final bool isCompleted;
-  
+
+  /// 試合終了時刻（完了時のみ）
+  final DateTime? endedAt;
+
   /// 総レイド数
   final int totalRaids;
 
@@ -34,6 +37,7 @@ class MatchSummary {
     required this.finalScoreB,
     required this.playedAt,
     this.isCompleted = false,
+    this.endedAt,
     this.totalRaids = 0,
   });
 
@@ -55,6 +59,7 @@ class MatchSummary {
       'finalScoreB': finalScoreB,
       'playedAt': playedAt.toIso8601String(),
       'isCompleted': isCompleted,
+      'endedAt': endedAt?.toIso8601String(),
       'totalRaids': totalRaids,
     };
   }
@@ -69,6 +74,9 @@ class MatchSummary {
       finalScoreB: json['finalScoreB'] as int,
       playedAt: DateTime.parse(json['playedAt'] as String),
       isCompleted: json['isCompleted'] as bool? ?? false,
+      endedAt: json['endedAt'] == null
+          ? null
+          : DateTime.parse(json['endedAt'] as String),
       totalRaids: json['totalRaids'] as int? ?? 0,
     );
   }
@@ -78,7 +86,9 @@ class MatchSummary {
 
   /// JSON文字列から生成
   factory MatchSummary.fromJsonString(String jsonString) {
-    return MatchSummary.fromJson(jsonDecode(jsonString) as Map<String, dynamic>);
+    return MatchSummary.fromJson(
+      jsonDecode(jsonString) as Map<String, dynamic>,
+    );
   }
 
   /// コピー（一部変更）
@@ -90,6 +100,7 @@ class MatchSummary {
     int? finalScoreB,
     DateTime? playedAt,
     bool? isCompleted,
+    DateTime? endedAt,
     int? totalRaids,
   }) {
     return MatchSummary(
@@ -100,6 +111,7 @@ class MatchSummary {
       finalScoreB: finalScoreB ?? this.finalScoreB,
       playedAt: playedAt ?? this.playedAt,
       isCompleted: isCompleted ?? this.isCompleted,
+      endedAt: endedAt ?? this.endedAt,
       totalRaids: totalRaids ?? this.totalRaids,
     );
   }

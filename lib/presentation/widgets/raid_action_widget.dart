@@ -33,7 +33,7 @@ class RaidActionWidget extends StatelessWidget {
         color: Colors.grey[100],
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 26),
             blurRadius: 4,
             offset: const Offset(0, -2),
           ),
@@ -53,7 +53,10 @@ class RaidActionWidget extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.sports_kabaddi, color: AppTheme.primaryColor),
+                  const Icon(
+                    Icons.sports_kabaddi,
+                    color: AppTheme.primaryColor,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'タッチ: $touchedCount人',
@@ -94,9 +97,9 @@ class RaidActionWidget extends StatelessWidget {
                   ),
                 ],
               ),
-            
+
             const SizedBox(height: 12),
-            
+
             // ボーナスチェックボックス
             if (hasRaider)
               Row(
@@ -111,16 +114,17 @@ class RaidActionWidget extends StatelessWidget {
                   const Text('ボーナスライン通過'),
                 ],
               ),
-            
+
             const SizedBox(height: 12),
-            
+
             // アクションボタン
             Row(
               children: [
                 // 空レイド
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: onEmptyRaid,
+                    onPressed:
+                        touchedCount == 0 && !isBonus ? onEmptyRaid : null,
                     icon: const Icon(Icons.block),
                     label: const Text('空レイド'),
                     style: OutlinedButton.styleFrom(
@@ -129,7 +133,7 @@ class RaidActionWidget extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                
+
                 // タックル成功
                 Expanded(
                   child: ElevatedButton.icon(
@@ -143,11 +147,13 @@ class RaidActionWidget extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                
+
                 // レイド成功
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: touchedCount > 0 || isBonus ? onRaidSuccess : null,
+                    onPressed: touchedCount > 0 || isBonus
+                        ? onRaidSuccess
+                        : null,
                     icon: const Icon(Icons.check_circle),
                     label: const Text('レイド成功'),
                     style: ElevatedButton.styleFrom(
