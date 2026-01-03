@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/app_theme.dart';
 import '../../../core/sync_config.dart';
@@ -111,14 +112,15 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 8),
 
               // 手動同期ボタン
-              SizedBox(
-                width: double.infinity,
-                child: TextButton.icon(
-                  onPressed: () => _syncToServer(context, ref),
-                  icon: const Icon(Icons.cloud_upload),
-                  label: const Text('手動同期（サーバーへ送信）'),
+              if (!kReleaseMode)
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton.icon(
+                    onPressed: () => _syncToServer(context, ref),
+                    icon: const Icon(Icons.cloud_upload),
+                    label: const Text('手動同期（サーバーへ送信）'),
+                  ),
                 ),
-              ),
             ],
           ),
         ),
